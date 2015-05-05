@@ -5,7 +5,7 @@
 -include("shannonmet_internal.hrl").
 
 %% API
--export([start_link/3, open_session/3, find/1, pull/2, pull_no_wait/2, poll/1, recv/2,
+-export([start_link/3, open_session/3, route/1, find/1, pull/2, pull_no_wait/2, poll/1, recv/2,
          send_obj/2, refresh/1, disconnect/1]).
 
 %% gen_server callbacks
@@ -45,6 +45,14 @@ open_session(Sid, TTL, Opts) ->
     redis_worker:sadd(<<"all_session">>, Sid),
     gen_server:cast(Pid, {send, Sid, {connect, <<>>}}), 
     Pid.
+
+route(Message) ->
+    case redis_worker:smembers(<<"all_session">>) of
+	Sessions when is_list(Sessions) ->
+	    [send_msg(S, Message) || S <- Sessions];
+	_ ->
+	    ok
+    end.
 
 route_msg_to_all(_Conn, _Sid, Message) ->
     case redis_worker:smembers(<<"all_session">>) of

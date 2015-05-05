@@ -22,15 +22,12 @@ init(Req, [Config]) ->
                 {{ok, Pid}, <<"GET">>} ->
                     case shannonmet_session:pull_no_wait(Pid, self()) of
                         session_in_use ->
-			    %% io:format("session in use ~n", []),
 			    Req1 = cowboy_req:reply(404, [], <<>>, Req), 
                             {ok, Req1, #http_state{action = session_in_use, config = Config, sid = Sid}};
                         [] ->
-			    %% io:format("xhr no msg ~n", []),
                             TRef = erlang:start_timer(Config#config.heartbeat, self(), {?MODULE, Pid}),
                             {cowboy_loop, Req, #http_state{action = heartbeat, config = Config, sid = Sid, heartbeat_tref = TRef, pid = Pid}};
                         Messages ->
-			    %% io:format("xhr messages : ~p  ~n", [Messages]),
 			    Req1 = reply_messages(Req, Messages, Config, false),
                             {ok, Req1, #http_state{action = data, messages = Messages, config = Config, sid = Sid, pid = Pid}}
                     end;
@@ -39,7 +36,8 @@ init(Req, [Config]) ->
                     case cowboy_req:body(Req) of
                         {ok, Body, Req1} ->
                             Messages = Protocol:decode(Body),
-			    shannonmet_session:recv(Pid, Messages),
+			    %% shannonmet_session:recv(Pid, Messages),
+			    shannonmet_session:route(Messages),
 			    Req2 = cowboy_req:reply(200, text_headers(), <<>>, Req1), 
                             {ok, Req2, #http_state{action = ok, config = Config, sid = Sid}};
                         {error, _} ->
