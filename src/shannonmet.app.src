@@ -1,0 +1,16 @@
+{application, shannonmet,
+ [
+  {description, "a comet server"},
+  {vsn, "1"},
+  {registered, [shannonmet_sup]},
+  {applications, [
+                  kernel,
+                  stdlib,
+		  cowboy
+                 ]},
+  {mod, { shannonmet_app, []}},
+  {env, [{redis_pool, [{size, 10}, 
+		       {hostname, "127.0.0.1"},
+		       {port, 6379},
+		       {password, "123321"}]}]}
+ ]}.
